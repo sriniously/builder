@@ -166,7 +166,10 @@ const ProjectCard = ({
       <Confirm
         open={isDialogOpen}
         setIsOpen={setIsDialogOpen}
-        handleSubmit={() => deleteProject(project.id)}
+        handleSubmit={() => {
+          // TODO: create a database transaction and delete all the entities related to this project
+          deleteProject(project.id);
+        }}
         title="Are you sure you want to delete this project?"
         description="This action cannot be undone."
       />
