@@ -65,7 +65,7 @@ export default function Home() {
   };
 
   return (
-    <main className="p-5">
+    <main className="p-5 max-w-[90rem] w-full mx-auto">
       <h2 className="text-2xl font-bold">My Projects</h2>
 
       <Dialog

@@ -1,6 +1,6 @@
 "use client";
 
-import { Database, FileJson, Globe } from "lucide-react";
+import { Database, FileJson, Globe, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 
@@ -27,12 +27,13 @@ export function AppSidebar() {
   const pathname = usePathname();
   const params = useParams();
 
-  console.log(pathname === `/project/${params.projectId}/resources`);
-
   return (
     <Sidebar>
       <SidebarHeader>
-        <h2 className="text-xl font-bold p-4">Builder</h2>
+        <Link href="/" className="flex items-center gap-2 p-4">
+          <Wrench className="h-6 w-6 text-green-500" />
+          <h2 className="text-xl font-bold">Builder</h2>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
