@@ -155,8 +155,12 @@ const ProjectCard = ({
       />
 
       {/* Content */}
-      <h2 className="text-xl font-semibold">{project.name}</h2>
-      <p className="text-gray-400">{truncate(project.description)}</p>
+      <h2 title={project.name} className="text-xl font-semibold">
+        {truncate(project.name, 15)}
+      </h2>
+      <p title={project.description} className="text-gray-400 text-sm">
+        {truncate(project.description, 30)}
+      </p>
 
       <button className="flex items-center gap-2 mt-5 text-sm text-blue-500 hover:text-blue-600">
         <ArrowRight className="h-4 w-4" />
