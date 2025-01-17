@@ -1,101 +1,264 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { ArrowRight, Edit, PlusCircle, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  useCreateProjectMutation,
+  useDeleteProjectMutation,
+  useGetAllProjectsQuery,
+  useGetProjectQuery,
+  useUpdateProjectMutation,
+} from "@/lib/api/projects";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Project } from "@/lib/db/models/projects";
+import { Confirm } from "@/components/custom/confirm";
+import { match } from "ts-pattern";
+import { useForm } from "react-hook-form";
+import Link from "next/link";
+import { truncate } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+    null
+  );
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+  const { data: projects, isLoading: isLoadingProjects } =
+    useGetAllProjectsQuery();
+
+  const { mutate: createProject, isPending: isCreatingProject } =
+    useCreateProjectMutation();
+
+  const { mutate: updateProject, isPending: isUpdatingProject } =
+    useUpdateProjectMutation(selectedProjectId);
+
+  const handleCreateProject = (data: { name: string; description: string }) => {
+    createProject(data);
+    setIsDialogOpen(false);
+  };
+
+  const handleUpdateProject = (data: { name: string; description: string }) => {
+    if (!selectedProjectId) return;
+    updateProject({ ...data, id: selectedProjectId });
+    setSelectedProjectId(null);
+    setIsDialogOpen(false);
+  };
+
+  return (
+    <main className="p-5">
+      <h2 className="text-2xl font-bold">My Projects</h2>
+
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(value) => {
+          setIsDialogOpen(value);
+          if (!value) {
+            setSelectedProjectId(null);
+          }
+        }}
+      >
+        <DialogTrigger asChild>
+          <Button className="flex items-center mt-5">
+            <PlusCircle className="h-8 w-8" />
+            Create New Project
+          </Button>
+        </DialogTrigger>
+        {isDialogOpen && (
+          <ProjectDialog
+            isSubmitting={isCreatingProject || isUpdatingProject}
+            key={isDialogOpen ? "open" : "closed"}
+            onSubmit={
+              selectedProjectId ? handleUpdateProject : handleCreateProject
+            }
+            projectId={selectedProjectId}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        )}
+      </Dialog>
+      <div className="flex flex-wrap gap-4 mt-5">
+        {match({ isLoadingProjects, projects })
+          .with({ isLoadingProjects: true, projects: undefined }, () =>
+            [...Array(5)].map((_, index) => (
+              <Skeleton key={index} className="w-60 h-32" />
+            ))
+          )
+          .with(
+            {
+              isLoadingProjects: false,
+              projects: [],
+            },
+            () => (
+              <div className="flex items-center justify-center w-full h-24">
+                <p className="text-gray-400 text-2xl">No projects found</p>
+              </div>
+            )
+          )
+          .otherwise(() =>
+            projects?.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                setSelectedProjectId={setSelectedProjectId}
+                setIsProjectDialogOpen={setIsDialogOpen}
+              />
+            ))
+          )}
+      </div>
+    </main>
   );
 }
+
+const ProjectCard = ({
+  project,
+  setSelectedProjectId,
+  setIsProjectDialogOpen,
+}: {
+  project: Project;
+  setSelectedProjectId: (id: number) => void;
+  setIsProjectDialogOpen: (open: boolean) => void;
+}) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { mutate: deleteProject } = useDeleteProjectMutation();
+
+  return (
+    <div className="p-5 h-32 w-60 border rounded-lg hover:shadow-md relative">
+      {/* Icons */}
+      <Edit
+        onClick={() => {
+          setSelectedProjectId(project.id);
+          setIsProjectDialogOpen(true);
+        }}
+        className="h-4 w-4 absolute top-2 right-8 text-blue-500 hover:text-blue-600 cursor-pointer"
+      />
+      <Trash2
+        onClick={() => setIsDialogOpen(true)}
+        className="h-4 w-4 absolute top-2 right-2 text-red-500 hover:text-red-600 cursor-pointer"
+      />
+
+      {/* Content */}
+      <h2 className="text-xl font-semibold">{project.name}</h2>
+      <p className="text-gray-400">{truncate(project.description)}</p>
+
+      <button className="flex items-center gap-2 mt-5 text-sm text-blue-500 hover:text-blue-600">
+        <ArrowRight className="h-4 w-4" />
+        <Link href={`/projects/${project.id}`}>View Project</Link>
+      </button>
+
+      <Confirm
+        open={isDialogOpen}
+        setIsOpen={setIsDialogOpen}
+        handleSubmit={() => deleteProject(project.id)}
+        title="Are you sure you want to delete this project?"
+        description="This action cannot be undone."
+      />
+    </div>
+  );
+};
+
+const projectFormSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters"),
+  description: z.string(),
+});
+
+type ProjectFormSchema = z.infer<typeof projectFormSchema>;
+
+interface ProjectDialogProps {
+  // if this is passed then we are editing the project
+  projectId: number | null;
+  isSubmitting: boolean;
+  onSubmit: (data: z.infer<typeof projectFormSchema>) => void;
+}
+
+const ProjectDialog = ({
+  isSubmitting,
+  onSubmit,
+  projectId,
+}: ProjectDialogProps) => {
+  const { data: project } = useGetProjectQuery(projectId);
+
+  const form = useForm<ProjectFormSchema>({
+    resolver: zodResolver(projectFormSchema),
+    defaultValues: {
+      name: project?.name || "",
+      description: project?.description || "",
+    },
+  });
+
+  useEffect(() => {
+    if (project) {
+      form.reset({
+        name: project.name,
+        description: project.description,
+      });
+    }
+
+    return () => {
+      form.reset();
+    };
+  }, [project, form]);
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>
+          {projectId ? "Edit Project" : "Create New Project"}
+        </DialogTitle>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Project Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Project Description" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            disabled={!form.formState.isDirty || isSubmitting}
+          >
+            {projectId ? "Update Project" : "Create Project"}
+          </Button>
+        </form>
+      </Form>
+    </DialogContent>
+  );
+};
