@@ -164,7 +164,7 @@ const ProjectCard = ({
 
       <button className="flex items-center gap-2 mt-5 text-sm text-blue-500 hover:text-blue-600">
         <ArrowRight className="h-4 w-4" />
-        <Link href={`/projects/${project.id}`}>View Project</Link>
+        <Link href={`/project/${project.id}/resources`}>View Project</Link>
       </button>
 
       <Confirm
