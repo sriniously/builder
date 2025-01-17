@@ -20,7 +20,7 @@ import {
   useUpdateProjectMutation,
 } from "@/lib/api/projects";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Project } from "@/lib/db/models/projects";
+import { Project } from "@/lib/db/models";
 import { Confirm } from "@/components/custom/confirm";
 import { match } from "ts-pattern";
 import { useForm } from "react-hook-form";
@@ -66,34 +66,36 @@ export default function Home() {
 
   return (
     <main className="p-5 max-w-[90rem] w-full mx-auto">
-      <h2 className="text-2xl font-bold">My Projects</h2>
-
-      <Dialog
-        open={isDialogOpen}
-        onOpenChange={(value) => {
-          setIsDialogOpen(value);
-          if (!value) {
-            setSelectedProjectId(null);
-          }
-        }}
-      >
-        <DialogTrigger asChild>
-          <Button className="flex items-center mt-5">
-            <PlusCircle className="h-8 w-8" />
-            Create New Project
-          </Button>
-        </DialogTrigger>
-        {isDialogOpen && (
-          <ProjectDialog
-            isSubmitting={isCreatingProject || isUpdatingProject}
-            key={isDialogOpen ? "open" : "closed"}
-            onSubmit={
-              selectedProjectId ? handleUpdateProject : handleCreateProject
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">My Projects</h2>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(value) => {
+            setIsDialogOpen(value);
+            if (!value) {
+              setSelectedProjectId(null);
             }
-            projectId={selectedProjectId}
-          />
-        )}
-      </Dialog>
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button className="flex items-center mt-5">
+              <PlusCircle className="h-8 w-8" />
+              Create New Project
+            </Button>
+          </DialogTrigger>
+          {isDialogOpen && (
+            <ProjectDialog
+              isSubmitting={isCreatingProject || isUpdatingProject}
+              key={isDialogOpen ? "open" : "closed"}
+              onSubmit={
+                selectedProjectId ? handleUpdateProject : handleCreateProject
+              }
+              projectId={selectedProjectId}
+            />
+          )}
+        </Dialog>
+      </div>
+
       <div className="flex flex-wrap gap-4 mt-5">
         {match({ isLoadingProjects, projects })
           .with({ isLoadingProjects: true, projects: undefined }, () =>
@@ -112,15 +114,16 @@ export default function Home() {
               </div>
             )
           )
-          .otherwise(() =>
-            projects?.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                setSelectedProjectId={setSelectedProjectId}
-                setIsProjectDialogOpen={setIsDialogOpen}
-              />
-            ))
+          .otherwise(
+            () =>
+              projects?.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  setSelectedProjectId={setSelectedProjectId}
+                  setIsProjectDialogOpen={setIsDialogOpen}
+                />
+              ))
           )}
       </div>
     </main>

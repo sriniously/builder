@@ -9,7 +9,7 @@ export default function ProjectLayout({
   };
 }) {
   return (
-    <div className="flex">
+    <div className="flex w-full">
       <AppSidebar />
       <div className="flex-1 p-5">{children}</div>
     </div>

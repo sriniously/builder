@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/db";
-import { Project } from "../db/models/projects";
+import { Project } from "../db/models";
 
 export const useGetAllProjectsQuery = () => {
   return useQuery({
