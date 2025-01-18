@@ -141,23 +141,22 @@ export default function ResourcePage() {
             </SelectContent>
           </Select>
 
-          {to === "json" ||
-            (to === "pg" && (
-              <Input
-                value={numOfMocks}
-                className="absolute top-0 left-52 w-20"
-                onChange={(e) => {
-                  setNumOfMocks(e.target.value);
-                  handleConvert({
-                    from,
-                    to,
-                    fromData,
-                    numOfMocks: e.target.value,
-                    setToData,
-                  });
-                }}
-              />
-            ))}
+          {(to === "json" || to === "pg") && (
+            <Input
+              value={numOfMocks}
+              className="absolute top-0 left-52 w-20"
+              onChange={(e) => {
+                setNumOfMocks(e.target.value);
+                handleConvert({
+                  from,
+                  to,
+                  fromData,
+                  numOfMocks: e.target.value,
+                  setToData,
+                });
+              }}
+            />
+          )}
         </div>
 
         <div className="flex-[0.5] h-full mt-12">{ToEditors[to]}</div>
