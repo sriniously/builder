@@ -44,7 +44,16 @@ export const useDeleteProjectMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => db.projects.delete(id),
+    mutationFn: async (id: number) => {
+      await db.transaction("rw", db.projects, db.resources, async () => {
+        const resources = await db.resources
+          .where("projectId")
+          .equals(id)
+          .toArray();
+        await db.resources.bulkDelete(resources.map((resource) => resource.id));
+        return db.projects.delete(id);
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },

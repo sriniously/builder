@@ -36,6 +36,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -140,7 +141,9 @@ const ProjectCard = ({
   setIsProjectDialogOpen: (open: boolean) => void;
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { mutate: deleteProject } = useDeleteProjectMutation();
+  const { mutateAsync: deleteProject } = useDeleteProjectMutation();
+
+  const { toast } = useToast();
 
   return (
     <div className="p-5 h-32 w-60 border rounded-lg hover:shadow-md relative">
@@ -162,7 +165,7 @@ const ProjectCard = ({
         {truncate(project.name, 15)}
       </h2>
       <p title={project.description} className="text-gray-400 text-sm">
-        {truncate(project.description, 30)}
+        {truncate(project.description, 25)}
       </p>
 
       <button className="flex items-center gap-2 mt-5 text-sm text-blue-500 hover:text-blue-600">
@@ -173,9 +176,14 @@ const ProjectCard = ({
       <Confirm
         open={isDialogOpen}
         setIsOpen={setIsDialogOpen}
-        handleSubmit={() => {
-          // TODO: create a database transaction and delete all the entities related to this project
-          deleteProject(project.id);
+        handleSubmit={async () => {
+          await deleteProject(project.id);
+
+          toast({
+            title: "Project deleted",
+            description:
+              "All resources related to this project have been deleted",
+          });
         }}
         title="Are you sure you want to delete this project?"
         description="This action cannot be undone."

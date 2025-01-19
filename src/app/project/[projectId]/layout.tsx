@@ -4,9 +4,6 @@ export default function ProjectLayout({
   children,
 }: {
   children: React.ReactNode;
-  params: {
-    projectId: string;
-  };
 }) {
   return (
     <div className="flex w-full">
