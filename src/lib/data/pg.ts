@@ -445,11 +445,17 @@ function generateFlatInsertStatement(
     typeConverters = {},
   } = options;
 
+  const normalizedTableName = PostgresUtils.normalizeIdentifier(tableName);
   const columns = Array.from(
     new Set(data.flatMap((obj) => Object.keys(obj)))
   ).sort();
+  const normalizedColumns = columns.map((col) =>
+    PostgresUtils.normalizeIdentifier(col)
+  );
 
-  let sql = `INSERT INTO ${tableName} (${columns.join(", ")})\nVALUES\n`;
+  let sql = `INSERT INTO ${normalizedTableName} (${normalizedColumns.join(
+    ", "
+  )})\nVALUES\n`;
 
   const values = data.map((row) => {
     const rowValues = columns.map((col) => {
@@ -464,13 +470,19 @@ function generateFlatInsertStatement(
   sql += values.join(",\n");
 
   if (onConflict?.length) {
-    sql += `\nON CONFLICT (${onConflict.join(", ")})`;
+    const normalizedConflictColumns = onConflict.map((col) =>
+      PostgresUtils.normalizeIdentifier(col)
+    );
+    sql += `\nON CONFLICT (${normalizedConflictColumns.join(", ")})`;
     if (onConflictAction === "update") {
       const updateColumns = columns.filter((col) => !onConflict.includes(col));
       if (updateColumns.length) {
         sql += `\nDO UPDATE SET\n`;
         sql += updateColumns
-          .map((col) => `  ${col} = EXCLUDED.${col}`)
+          .map((col) => {
+            const normalizedCol = PostgresUtils.normalizeIdentifier(col);
+            return `  ${normalizedCol} = EXCLUDED.${normalizedCol}`;
+          })
           .join(",\n");
       } else {
         sql += "\nDO NOTHING";
@@ -482,7 +494,10 @@ function generateFlatInsertStatement(
 
   if (returning) {
     if (Array.isArray(returning)) {
-      sql += `\nRETURNING ${returning.join(", ")}`;
+      const normalizedReturning = returning.map((col) =>
+        PostgresUtils.normalizeIdentifier(col)
+      );
+      sql += `\nRETURNING ${normalizedReturning.join(", ")}`;
     } else {
       sql += "\nRETURNING *";
     }

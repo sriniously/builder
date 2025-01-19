@@ -37,6 +37,7 @@ import { useForm } from "react-hook-form";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import Link from "next/link";
+import { DefaultKeysAccordion } from "@/components/default-keys-accordion";
 
 export default function ResourcesPage() {
   const { projectId } = useParams();
@@ -62,8 +63,14 @@ export default function ResourcesPage() {
   const handleCreateResource = (data: {
     name: string;
     description: string;
+    defaultKeys?: string[];
   }) => {
-    createResource({ ...data, projectId: Number(projectId), content: "" });
+    let content = "z.object({";
+    data.defaultKeys?.forEach((key) => {
+      content += `${key}: z.string(),`;
+    });
+    content += "})";
+    createResource({ ...data, projectId: Number(projectId), content });
     setIsDialogOpen(false);
   };
 
@@ -207,6 +214,7 @@ const ResourceCard = ({
 const resourceFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string(),
+  defaultKeys: z.array(z.string()).optional(),
 });
 
 type ResourceFormSchema = z.infer<typeof resourceFormSchema>;
@@ -224,6 +232,12 @@ const ResourceDialog = ({
 }: ResourceDialogProps) => {
   const { projectId } = useParams();
   const { data: resource } = useGetResourceQuery(Number(projectId), resourceId);
+  const [defaultKeysEnabled, setDefaultKeysEnabled] = useState(true);
+  const [selectedDefaultKeys, setSelectedDefaultKeys] = useState<string[]>([
+    "id",
+    "createdAt",
+    "updatedAt",
+  ]);
 
   const form = useForm<ResourceFormSchema>({
     resolver: zodResolver(resourceFormSchema),
@@ -246,6 +260,13 @@ const ResourceDialog = ({
     };
   }, [resource, form]);
 
+  const handleSubmit = (data: ResourceFormSchema) => {
+    onSubmit({
+      ...data,
+      defaultKeys: defaultKeysEnabled ? selectedDefaultKeys : [],
+    });
+  };
+
   return (
     <DialogContent>
       <DialogHeader>
@@ -254,7 +275,7 @@ const ResourceDialog = ({
         </DialogTitle>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="name"
@@ -281,6 +302,14 @@ const ResourceDialog = ({
               </FormItem>
             )}
           />
+
+          <DefaultKeysAccordion
+            enabled={defaultKeysEnabled}
+            onEnabledChange={setDefaultKeysEnabled}
+            selectedKeys={selectedDefaultKeys}
+            onSelectedKeysChange={setSelectedDefaultKeys}
+          />
+
           <Button
             type="submit"
             disabled={!form.formState.isDirty || isSubmitting}
