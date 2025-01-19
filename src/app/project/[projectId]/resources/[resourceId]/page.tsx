@@ -1,8 +1,11 @@
 "use client";
 
-import { useGetResourceQuery } from "@/lib/api/resources";
+import {
+  useGetResourceQuery,
+  useUpdateResourceMutation,
+} from "@/lib/api/resources";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FromOptions, TFrom, ToOptions, TTo } from "@/lib/data/options";
 import {
   Select,
@@ -13,10 +16,12 @@ import {
   SelectLabel,
   SelectItem,
 } from "@/components/ui/select";
+import { useDebounceCallback } from "usehooks-ts";
 import { Editor } from "@/components/editors/editor";
-import { handleConvert } from "@/lib/data/conversion";
+import { handleConvert, tsToZod, zodToTs } from "@/lib/data/conversion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Resource } from "@/lib/db/models";
 
 export default function ResourcePage() {
   const { projectId, resourceId } = useParams();
@@ -25,15 +30,47 @@ export default function ResourcePage() {
   const [toData, setToData] = useState<string>("");
   const [from, setFrom] = useState<TFrom>("ts");
   const [to, setTo] = useState<TTo>("json");
+  const isDataLoaded = useRef(false);
+
+  const { mutate: updateResource } = useUpdateResourceMutation(
+    Number(projectId),
+    Number(resourceId)
+  );
 
   const { data: resource } = useGetResourceQuery(
     Number(projectId),
     Number(resourceId)
   );
 
-  if (!resource) {
-    return null;
-  }
+  useEffect(() => {
+    if (resource && !isDataLoaded.current) {
+      // need to convert to ts then set
+      if (resource.content) {
+        const tsData = zodToTs(resource.content);
+        setFromData(tsData);
+      }
+      isDataLoaded.current = true;
+    }
+  }, [resource]);
+
+  const saveFromData = (value: string) => {
+    // we will save the zod version of the data
+    if (from === "zod") {
+      updateResource({
+        ...resource,
+        content: value,
+      } as Resource);
+    } else if (from === "ts") {
+      // convert then save
+      const convertedData = tsToZod(value, true);
+      updateResource({
+        ...resource,
+        content: convertedData,
+      } as Resource);
+    }
+  };
+
+  const debouncedSaveFromData = useDebounceCallback(saveFromData, 1000);
 
   const handleFromChange = (value: TFrom) => {
     setFrom(value);
@@ -59,6 +96,7 @@ export default function ResourcePage() {
 
   const handleFromDataChange = (val: string) => {
     setFromData(val);
+    debouncedSaveFromData(val);
     if (!val) {
       setToData("");
     }
@@ -80,6 +118,10 @@ export default function ResourcePage() {
     pg: <Editor onChange={() => {}} value={toData} language="sql" readOnly />,
     go: <Editor onChange={() => {}} value={toData} language="go" readOnly />,
   };
+
+  if (!resource) {
+    return null;
+  }
 
   return (
     <div className="2xl:h-[96vh] h-[94vh] overflow-y-hidden">

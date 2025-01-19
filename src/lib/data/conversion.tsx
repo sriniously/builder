@@ -5,10 +5,7 @@ import { z } from "zod";
 import { TFrom, TTo } from "./options";
 import { match } from "ts-pattern";
 import { jsonToGo } from "./json-to-go";
-import {
-  generateInsertStatements,
-  generatePostgresSchema,
-} from "./pg";
+import { generateInsertStatements, generatePostgresSchema } from "./pg";
 
 export const tsToZod = (ts: string, onlyString: boolean) => {
   if (!ts.startsWith("type") && !ts.startsWith("interface")) {
@@ -38,7 +35,13 @@ export const zodStringToZod = (zodString: string, onlyString: boolean) => {
     0,
     zodSchemaWithoutDeclaration.indexOf(";")
   );
-  const schema = new Function("z", `return (${zodSchemaWithoutSemicolon});`)(z);
+  let schema: z.ZodType;
+
+  try {
+    schema = new Function("z", `return (${zodSchemaWithoutSemicolon});`)(z);
+  } catch {
+    schema = z.object({});
+  }
   return onlyString ? zodSchemaWithoutSemicolon : (schema as z.ZodType);
 };
 
@@ -99,10 +102,7 @@ export const handleConvert = ({
             }
             finalData = `${generatePostgresSchema(
               createJson
-            )}\n\n${generateInsertStatements(
-              JSON.parse(insertJsons),
-              {}
-            )}`;
+            )}\n\n${generateInsertStatements(JSON.parse(insertJsons), {})}`;
           })
           .otherwise(() => {});
       })
@@ -144,10 +144,7 @@ export const handleConvert = ({
             }
             finalData = `${generatePostgresSchema(
               createJson
-            )}\n\n${generateInsertStatements(
-              JSON.parse(insertJsons),
-              {}
-            )}`;
+            )}\n\n${generateInsertStatements(JSON.parse(insertJsons), {})}`;
           })
           .otherwise(() => {});
       })
