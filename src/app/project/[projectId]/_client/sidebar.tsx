@@ -1,6 +1,6 @@
 "use client";
 
-import { Database, FileJson, Globe, Wrench } from "lucide-react";
+import { FileJson, Globe, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 
@@ -20,7 +20,6 @@ import {
 const menuItems = [
   { icon: FileJson, label: "Resources", href: "/resources" },
   { icon: Globe, label: "API", href: "/api" },
-  { icon: Database, label: "Database", href: "/database" },
 ];
 
 export function AppSidebar() {
