@@ -45,12 +45,19 @@ export const useDeleteProjectMutation = () => {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      await db.transaction("rw", db.projects, db.resources, async () => {
+      await db.transaction("rw", db.projects, db.resources, db.tags, async () => {
+        // Delete resources
         const resources = await db.resources
           .where("projectId")
           .equals(id)
           .toArray();
         await db.resources.bulkDelete(resources.map((resource) => resource.id));
+
+        // Delete tags
+        const tags = await db.tags.where("projectId").equals(id).toArray();
+        await db.tags.bulkDelete(tags.map((tag) => tag.id));
+
+        // Delete project
         return db.projects.delete(id);
       });
     },

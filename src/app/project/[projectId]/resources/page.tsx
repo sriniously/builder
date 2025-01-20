@@ -22,7 +22,7 @@ import {
   useUpdateResourceMutation,
 } from "@/lib/api/resources";
 import { Resource } from "@/lib/db/models";
-import { truncate } from "@/lib/utils";
+import { cn, truncate } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
@@ -192,7 +192,12 @@ const ResourceCard = ({
           {truncate(resource.description, 30)}
         </p>
 
-        <button className="flex items-center gap-2 mt-5 text-sm text-blue-500 hover:text-blue-600">
+        <button
+          className={cn(
+            "flex items-center gap-2 mt-5 text-sm text-blue-500 hover:text-blue-600",
+            !resource.description && "mt-10"
+          )}
+        >
           <ArrowRight className="h-4 w-4" />
           <Link href={`/project/${projectId}/resources/${resource.id}`}>
             View Resource

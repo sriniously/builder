@@ -25,7 +25,7 @@ import { Confirm } from "@/components/custom/confirm";
 import { match } from "ts-pattern";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
-import { truncate } from "@/lib/utils";
+import { cn, truncate } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -168,7 +168,12 @@ const ProjectCard = ({
         {truncate(project.description, 25)}
       </p>
 
-      <button className="flex items-center gap-2 mt-5 text-sm text-blue-500 hover:text-blue-600">
+      <button
+        className={cn(
+          "flex items-center gap-2 mt-5 text-sm text-blue-500 hover:text-blue-600",
+          !project.description && "mt-10"
+        )}
+      >
         <ArrowRight className="h-4 w-4" />
         <Link href={`/project/${project.id}/resources`}>View Project</Link>
       </button>
