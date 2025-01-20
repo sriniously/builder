@@ -308,12 +308,14 @@ const ResourceDialog = ({
             )}
           />
 
-          <DefaultKeysAccordion
-            enabled={defaultKeysEnabled}
-            onEnabledChange={setDefaultKeysEnabled}
-            selectedKeys={selectedDefaultKeys}
-            onSelectedKeysChange={setSelectedDefaultKeys}
-          />
+          {!resourceId && (
+            <DefaultKeysAccordion
+              enabled={defaultKeysEnabled}
+              onEnabledChange={setDefaultKeysEnabled}
+              selectedKeys={selectedDefaultKeys}
+              onSelectedKeysChange={setSelectedDefaultKeys}
+            />
+          )}
 
           <Button
             type="submit"
